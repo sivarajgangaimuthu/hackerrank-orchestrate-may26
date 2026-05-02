@@ -230,6 +230,17 @@ GEMINI_MODEL=gemini-2.5-flash-lite
 
 ---
 
+# Chat Transcript Logging
+
+AI coding assistants append conversation and ticket-processing logs to a shared external log file for hackathon AI fluency evaluation. The log is stored outside this repository:
+
+* Windows: `%USERPROFILE%/hackerrank_orchestrate/log.txt`
+* macOS/Linux: `$HOME/hackerrank_orchestrate/log.txt`
+
+The log directory and file are created automatically if missing. Logs are append-only, existing entries are never overwritten, and the external log file must never be committed to git.
+
+---
+
 # Running the Project
 
 ## Run Full Pipeline
