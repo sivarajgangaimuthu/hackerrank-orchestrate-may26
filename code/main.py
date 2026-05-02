@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from agent import TicketTriageAgent
+from ticket_logging import append_ticket_log, ensure_log_file, log_path
 
 
 OUTPUT_COLUMNS = ("status", "product_area", "response", "justification", "request_type")
@@ -65,10 +66,12 @@ def write_outputs(output_path: Path, rows: list[dict[str, str]]) -> None:
 def process_tickets(input_path: Path, output_path: Path, use_gemini: bool = True) -> dict[str, int]:
     tickets = read_tickets(input_path)
     total = len(tickets)
+    ticket_log_path = ensure_log_file()
 
     print(f"Loading support corpus and building retrieval index...")
     agent = TicketTriageAgent(use_gemini=use_gemini)
     print(f"Processing {total} ticket(s) from {input_path}")
+    print(f"Appending ticket logs to {ticket_log_path}")
 
     outputs: list[dict[str, str]] = []
     replied_count = 0
@@ -81,6 +84,16 @@ def process_tickets(input_path: Path, output_path: Path, use_gemini: bool = True
 
         result = agent.process_ticket(issue, subject=subject, company=company)
         outputs.append(result)
+        append_ticket_log(
+            subject=subject,
+            company=company,
+            issue=issue,
+            request_type=result["request_type"],
+            product_area=result["product_area"],
+            status=result["status"],
+            response=result["response"],
+            path=ticket_log_path,
+        )
 
         if result["status"] == "replied":
             replied_count += 1
@@ -126,6 +139,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Disable Gemini calls and use deterministic local fallback responses.",
     )
+    parser.epilog = f"Ticket processing logs are appended to: {log_path()}"
     return parser.parse_args()
 
 
