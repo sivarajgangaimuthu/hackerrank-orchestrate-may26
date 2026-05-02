@@ -1,134 +1,342 @@
-# HackerRank Orchestrate
+# Multi-Domain Support Triage Agent
 
-Starter repository for the **HackerRank Orchestrate** 24-hour hackathon (May 1–2, 2026).
+AI-powered terminal-based support triage system built for the HackerRank Orchestrate Hackathon 2026.
 
-Build a terminal-based AI agent that triages real support tickets across three product ecosystems; **HackerRank**, **Claude**, and **Visa** — using only the support corpus shipped in this repo.
+The agent processes support tickets across three ecosystems:
 
-Read [`problem_statement.md`](./problem_statement.md) for the full task spec, input/output schema, and allowed values, and [`evalutation_criteria.md`](./evalutation_criteria.md) for how submissions are scored.
+* HackerRank Support
+* Claude Help Center
+* Visa Support
 
----
+The system uses only the provided support corpus to:
 
-## Contents
-
-1. [Repository layout](#repository-layout)
-2. [What you need to build](#what-you-need-to-build)
-3. [Where your code goes](#where-your-code-goes)
-4. [Quickstart](#quickstart)
-5. [Chat transcript logging](#chat-transcript-logging)
-6. [Submission](#submission)
-7. [Judge interview](#judge-interview)
-8. [Evaluation criteria](#evaluation-criteria)
+* classify support requests
+* retrieve relevant support documentation
+* detect sensitive/high-risk issues
+* escalate unsupported or risky cases
+* generate grounded responses
 
 ---
 
-## Repository layout
+# Features
 
-```
+## Intelligent Ticket Classification
+
+Classifies:
+
+* request type
+* product area
+* company/domain
+
+Supported request types:
+
+* `product_issue`
+* `feature_request`
+* `bug`
+* `invalid`
+
+---
+
+## Retrieval-Augmented Generation (RAG)
+
+Uses:
+
+* local markdown support corpus
+* TF-IDF retrieval
+* cosine similarity ranking
+
+No external support knowledge is used.
+
+---
+
+## Safety & Escalation Logic
+
+Automatically escalates:
+
+* hacked/stolen accounts
+* fraud or payment disputes
+* unauthorized access issues
+* legal threats
+* sensitive financial/account cases
+
+This prevents unsafe automated responses.
+
+---
+
+## Grounded AI Responses
+
+Responses are generated using:
+
+* retrieved support documents
+* deterministic prompting
+* Gemini API grounding
+
+The system avoids:
+
+* hallucinated policies
+* unsupported guarantees
+* fabricated troubleshooting steps
+
+---
+
+# Repository Structure
+
+```text
 .
-├── AGENTS.md                       # Rules for AI coding tools + transcript logging
-├── problem_statement.md            # Full task description and I/O schema
-├── README.md                       # You are here
-├── code/                           # ← Build your agent here
-│   └── main.py                     #   Entry point (rename/extend as you like)
-├── data/                           # Local-only support corpus (no network needed)
-│   ├── hackerrank/                 #   HackerRank help center
-│   ├── claude/                     #   Claude Help Center export
-│   └── visa/                       #   Visa consumer + small-business support
-└── support_tickets/
-    ├── sample_support_tickets.csv  # Inputs + expected outputs (for development)
-    ├── support_tickets.csv         # Inputs only (run your agent on these)
-    └── output.csv                  # Write your agent's predictions here
+├── AGENTS.md
+├── README.md
+├── .gitignore
+├── .env.example
+├── requirements.txt
+│
+├── code/
+│   ├── main.py
+│   ├── agent.py
+│   ├── corpus.py
+│   ├── retrieval.py
+│   ├── classifier.py
+│   ├── risk.py
+│   └── responder.py
+│
+├── support_tickets/
+│   ├── sample_support_tickets.csv
+│   ├── support_tickets.csv
+│   └── output.csv
+│
+├── data/
+│   ├── visa/
+│   ├── hackerrank/
+│   └── claude/
 ```
 
 ---
 
-## What you need to build
+# Architecture
 
-A terminal-based agent that, for each row in `support_tickets/support_tickets.csv`, produces:
+## 1. Corpus Loader (`corpus.py`)
 
-| Column         | Allowed values                                          |
-| -------------- | ------------------------------------------------------- |
-| `status`       | `replied`, `escalated`                                  |
-| `product_area` | most relevant support category / domain area            |
-| `response`     | user-facing answer grounded in the provided corpus      |
-| `justification`| concise explanation of the routing/answering decision   |
-| `request_type` | `product_issue`, `feature_request`, `bug`, `invalid`    |
+* loads markdown support documents
+* extracts clean text
+* prepares retrieval corpus
 
-Hard requirements (from `problem_statement.md`):
+## 2. Retrieval Engine (`retrieval.py`)
 
-- Must be **terminal-based**.
-- Must use **only the provided support corpus** (no live web calls for ground-truth answers).
-- Must **escalate** high-risk, sensitive, or unsupported cases instead of guessing.
-- Must avoid hallucinated policies or unsupported claims.
+* TF-IDF vectorization
+* cosine similarity ranking
+* retrieves relevant support articles
 
-Beyond that you are free to bring your own approach — RAG, vector DBs, tool use, structured output, agent frameworks, classical ML, or anything else.
+## 3. Ticket Classifier (`classifier.py`)
+
+Classifies:
+
+* request type
+* company
+* product area
+
+Uses deterministic rule-based logic.
+
+## 4. Risk Engine (`risk.py`)
+
+Detects:
+
+* fraud
+* hacked accounts
+* legal threats
+* payment disputes
+* sensitive security issues
+
+Determines:
+
+* `replied`
+* `escalated`
+
+## 5. Response Generator (`responder.py`)
+
+Generates:
+
+* grounded support response
+* justification
+
+Uses Gemini API with retrieved context.
+
+## 6. Agent Orchestrator (`agent.py`)
+
+Combines:
+
+* retrieval
+* classification
+* risk assessment
+* response generation
+
+## 7. Pipeline Entry Point (`main.py`)
+
+Processes:
+
+* `support_tickets.csv`
+
+Generates:
+
+* `output.csv`
 
 ---
 
-## Where your code goes
+# Installation
 
-All of your work belongs in [`code/`](./code/). The repo ships with an empty `code/main.py` you can grow into your full agent — add more modules (`agent.py`, `retriever.py`, `classifier.py`, etc.) next to it as needed.
-
-Conventions:
-
-- Put a **README inside `code/`** describing how to install dependencies and run your agent.
-- Read secrets **from environment variables only** (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, …). Copy `.env.example` → `.env` (already gitignored) if you keep one. **Never hardcode keys.**
-- Be **deterministic** where possible. Seed any random sampling.
-- Write responses to `support_tickets/output.csv`.
-
----
-
-## Quickstart
-
-Clone this repository:
+## Clone Repository
 
 ```bash
-git clone git@github.com:interviewstreet/hackerrank-orchestrate-may26.git
+git clone <your_repo_url>
 cd hackerrank-orchestrate-may26
 ```
 
-You are free to use any language or runtime. We recommend **Python**, **JavaScript**, or **TypeScript**.
+---
+
+## Create Virtual Environment
+
+### Windows (Git Bash)
+
+```bash
+python -m venv venv
+source venv/Scripts/activate
+```
+
+### Windows (CMD)
+
+```cmd
+python -m venv venv
+venv\Scripts\activate
+```
 
 ---
 
-## Chat transcript logging
+## Install Dependencies
 
-This repo ships with an `AGENTS.md` that any modern AI coding tool (Cursor, Claude Code, Codex, Gemini CLI, Copilot, etc.) will read. It instructs the tool to append every conversation turn to a single shared log file:
-
-| Platform       | Path                                              |
-| -------------- | ------------------------------------------------- |
-| macOS / Linux  | `$HOME/hackerrank_orchestrate/log.txt`            |
-| Windows        | `%USERPROFILE%\hackerrank_orchestrate\log.txt`    |
-
-You don't need to do anything to enable it — just use your AI tool normally. You'll upload this `log.txt` as your chat transcript at submission time.
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## Submission
+# Environment Setup
 
-Submit on the HackerRank Community Platform:
-<https://www.hackerrank.com/contests/hackerrank-orchestrate-may26/challenges/support-agent/submission>
+Create `.env`
 
-You will upload **three** files:
+Example:
 
-1. **Code zip** — zip your `code/` directory and upload it. Exclude virtualenvs, `node_modules`, build artifacts, the `data/` corpus, and the `support_tickets/` CSVs.
-2. **Predictions CSV** — your agent's output for `support_tickets/support_tickets.csv` (i.e. the populated `output.csv`).
-3. **Chat transcript** — the `log.txt` from the path in [Chat transcript logging](#chat-transcript-logging).
-
----
-
-## Judge interview
-
-After a successful submission, your AI Judge interview will happen within a few hours after the hackathon ends. It will stay open for the next 4 hours. 
-
-The AI Judge will have access to your submission and may ask about your approach, decisions, and how you used AI while building your solution. The interview will be 30 minutes long, and keeping your camera on is mandatory.
-
-Results will be announced on May 15, 2026
+```env
+GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-2.5-flash-lite
+```
 
 ---
 
-## Evaluation criteria
+# Running the Project
 
-Submissions are scored across four dimensions: agent design (your `code/`), the AI Judge interview, output accuracy on `support_tickets/output.csv`, and AI fluency from your chat transcript.
+## Run Full Pipeline
 
-See [`evalutation_criteria.md`](./evalutation_criteria.md) for the full rubric.
+```bash
+python code/main.py
+```
+
+This will:
+
+* read support tickets
+* classify requests
+* retrieve relevant support documents
+* detect escalation cases
+* generate grounded responses
+* create `support_tickets/output.csv`
+
+---
+
+# Output Format
+
+Generated file:
+
+```text
+support_tickets/output.csv
+```
+
+Output columns:
+
+* `status`
+* `product_area`
+* `response`
+* `justification`
+* `request_type`
+
+---
+
+# Sample Commands
+
+## Test Retrieval
+
+```bash
+python code/retrieval.py
+```
+
+## Test Classification
+
+```bash
+python code/classifier.py
+```
+
+## Test Escalation Logic
+
+```bash
+python code/risk.py
+```
+
+## Test Response Generation
+
+```bash
+python code/responder.py
+```
+
+## Test Full Agent
+
+```bash
+python code/agent.py
+```
+
+---
+
+# Safety Strategy
+
+The system never:
+
+* invents unsupported policies
+* guarantees unavailable features
+* exposes sensitive information
+* answers high-risk security/fraud issues directly
+
+Sensitive cases are escalated to human review.
+
+---
+
+# Design Goals
+
+* deterministic behavior
+* explainable reasoning
+* grounded responses
+* modular architecture
+* safe escalation handling
+* offline corpus retrieval
+
+---
+
+# Technologies Used
+
+* Python
+* scikit-learn
+* Gemini API
+* TF-IDF Retrieval
+* CSV Processing
+* Rule-Based Classification
+
+---
+
+# Hackathon
+
+Built for:
+HackerRank Orchestrate Hackathon 2026
